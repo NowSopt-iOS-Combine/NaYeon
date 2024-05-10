@@ -7,12 +7,16 @@
 
 import UIKit
 
+import Combine
+import CombineCocoa
 import SnapKit
 
 final class LoginViewController: UIViewController {
     
     // MARK: - Properties
     
+    private let viewModel = AuthViewModel()
+    private var cancelBag = CancelBag()
     private var nickname = ""
     
     // MARK: - UI Components
@@ -34,8 +38,66 @@ final class LoginViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        bindViewModel()
         setDelegate()
         setButtonAction()
+    }
+    
+    func bindViewModel() {
+        let idTextFieldFocus = idTextField.didBeginEditingPublisher
+            .map { return AuthTextFieldType.id }
+            .eraseToAnyPublisher()
+        
+        let pwTextFieldFocus = passwordTextField.didBeginEditingPublisher
+            .map { return AuthTextFieldType.pw }
+            .eraseToAnyPublisher()
+        
+        let idTextFieldPublisher = idTextField.textPublisher
+            .filter { $0 != nil }
+            .map {
+                guard let text = $0 else { return false }
+                return !text.isEmpty
+            }
+            .eraseToAnyPublisher()
+        
+        let pwTextFieldPublisher = passwordTextField.textPublisher
+            .filter { $0 != nil }
+            .map {
+                guard let text = $0 else { return false }
+                return !text.isEmpty
+            }
+            .eraseToAnyPublisher()
+        
+        let input = AuthViewModel.Input(
+            idTextFieldPublisher: idTextFieldPublisher,
+            pwTextFieldPublisher: pwTextFieldPublisher,
+            idTextFieldFocus: idTextFieldFocus,
+            pwTextFieldFocus: pwTextFieldFocus
+        )
+        
+        let output = viewModel.transform(from: input)
+        
+        output.isAllEntered
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: { [weak self] isAllEntered in
+                if isAllEntered { self?.changeLoginButtonActivationState(to: true)}
+                else { self?.changeLoginButtonActivationState(to: false)}
+            })
+            .store(in: cancelBag)
+        
+        output.textFieldFocus
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: { [weak self] textFieldType in
+                switch textFieldType {
+                case .id:
+                    self?.idTextField.makeBorder(width: 1, color: .gray2)
+                    self?.passwordTextField.makeBorder(width: 0, color: .clear)
+                case .pw:
+                    self?.passwordTextField.makeBorder(width: 1, color: .gray2)
+                    self?.idTextField.makeBorder(width: 0, color: .clear)
+                }
+            })
+            .store(in: cancelBag)
     }
 }
 
@@ -44,8 +106,8 @@ final class LoginViewController: UIViewController {
 private extension LoginViewController {
     
     func setDelegate() {
-        idTextField.delegate = self
-        passwordTextField.delegate = self
+//        idTextField.delegate = self
+//        passwordTextField.delegate = self
     }
     
     func setButtonAction() {
@@ -71,7 +133,8 @@ private extension LoginViewController {
                 return makeAlert(title: "", message: I18N.Auth.pwValidationText)
             }
             let welcomeVC = WelcomeViewController()
-            welcomeVC.nickname = nickname
+            welcomeVC.nickname = idTextField.text ?? ""
+//            welcomeVC.nickname = nickname
             self.navigationController?.pushViewController(welcomeVC, animated: true)
         }
     }
@@ -84,24 +147,24 @@ private extension LoginViewController {
     }
 }
 
-extension LoginViewController: UITextFieldDelegate {
-    
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        textField.makeBorder(width: 1, color: .gray2)
-    }
-    
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        textField.makeBorder(width: 0, color: .clear)
-    }
-    
-    func textFieldDidChangeSelection(_ textField: UITextField) {
-        if !idTextField.isEmpty, !passwordTextField.isEmpty {
-            changeLoginButtonActivationState(to: true)
-        } else {
-            changeLoginButtonActivationState(to: false)
-        }
-    }
-}
+//extension LoginViewController: UITextFieldDelegate {
+//    
+//    func textFieldDidBeginEditing(_ textField: UITextField) {
+//        textField.makeBorder(width: 1, color: .gray2)
+//    }
+//    
+//    func textFieldDidEndEditing(_ textField: UITextField) {
+//        textField.makeBorder(width: 0, color: .clear)
+//    }
+//    
+//    func textFieldDidChangeSelection(_ textField: UITextField) {
+//        if !idTextField.isEmpty, !passwordTextField.isEmpty {
+//            changeLoginButtonActivationState(to: true)
+//        } else {
+//            changeLoginButtonActivationState(to: false)
+//        }
+//    }
+//}
 
 extension LoginViewController: DataBindProtocol {
     func dataBind(nickname: String) {
