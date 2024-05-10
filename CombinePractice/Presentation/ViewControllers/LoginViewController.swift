@@ -53,7 +53,6 @@ final class LoginViewController: UIViewController {
             .eraseToAnyPublisher()
         
         let idTextFieldPublisher = idTextField.textPublisher
-            .filter { $0 != nil }
             .map {
                 guard let text = $0 else { return false }
                 return !text.isEmpty
@@ -61,7 +60,6 @@ final class LoginViewController: UIViewController {
             .eraseToAnyPublisher()
         
         let pwTextFieldPublisher = passwordTextField.textPublisher
-            .filter { $0 != nil }
             .map {
                 guard let text = $0 else { return false }
                 return !text.isEmpty
