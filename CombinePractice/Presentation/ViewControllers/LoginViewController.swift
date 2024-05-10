@@ -39,7 +39,6 @@ final class LoginViewController: UIViewController {
         super.viewDidLoad()
         
         bindViewModel()
-        setDelegate()
         setButtonAction()
     }
     
@@ -103,14 +102,8 @@ final class LoginViewController: UIViewController {
 
 private extension LoginViewController {
     
-    func setDelegate() {
-//        idTextField.delegate = self
-//        passwordTextField.delegate = self
-    }
-    
     func setButtonAction() {
         loginButton.addTarget(self, action: #selector(loginButtonDidTap), for: .touchUpInside)
-        goToCreateNicknameButton.addTarget(self, action: #selector(goToCreateNicknameButtonDidTap), for: .touchUpInside)
     }
     
     func changeLoginButtonActivationState(to state: Bool) {
@@ -136,33 +129,7 @@ private extension LoginViewController {
             self.navigationController?.pushViewController(welcomeVC, animated: true)
         }
     }
-    
-    @objc func goToCreateNicknameButtonDidTap() {
-//        let createNicknameVC = CreateNicknameViewController()
-//        createNicknameVC.delegate = self
-//        createNicknameVC.modalPresentationStyle = .pageSheet
-//        self.present(createNicknameVC, animated: true)
-    }
 }
-
-//extension LoginViewController: UITextFieldDelegate {
-//    
-//    func textFieldDidBeginEditing(_ textField: UITextField) {
-//        textField.makeBorder(width: 1, color: .gray2)
-//    }
-//    
-//    func textFieldDidEndEditing(_ textField: UITextField) {
-//        textField.makeBorder(width: 0, color: .clear)
-//    }
-//    
-//    func textFieldDidChangeSelection(_ textField: UITextField) {
-//        if !idTextField.isEmpty, !passwordTextField.isEmpty {
-//            changeLoginButtonActivationState(to: true)
-//        } else {
-//            changeLoginButtonActivationState(to: false)
-//        }
-//    }
-//}
 
 extension LoginViewController: DataBindProtocol {
     func dataBind(nickname: String) {
